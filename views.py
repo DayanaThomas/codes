@@ -1,17 +1,23 @@
-from django.shortcuts import render,redirect
-from .form import ImageForm
-from .models import Image
-
-
+from django.shortcuts import render, redirect, HttpResponseRedirect
+from login.models import Member #models.py
+ 
 # Create your views here.
 def index(request):
-    if request.method == "POST":
-        form=ImageForm(data=request.POST,files=request.FILES)
-        if form.is_valid():
-            form.save()
-            obj=form.instance
-            return render(request,"image.html",{"obj":obj})  
+    if request.method == 'POST':
+        member = Member(username=request.POST['username'], password=request.POST['password'],  firstname=request.POST['firstname'], lastname=request.POST['lastname'])
+        member.save()
+        return redirect('/')
     else:
-        form=ImageForm()    
-        img=Image.objects.all()
-    return render(request,"image.html",{"img":img,"form":form})
+        return render(request, 'index.html')
+ 
+def login(request):
+    return render(request, 'login.html')
+ 
+def home(request):
+    if request.method == 'POST':
+        if Member.objects.filter(username=request.POST['username'], password=request.POST['password']).exists():
+            member = Member.objects.get(username=request.POST['username'], password=request.POST['password'])
+            return render(request, 'image.html', {'member': member})
+        else:
+            context = {'msg': 'Invalid username or password'}
+            return render(request, 'login.html', context)
